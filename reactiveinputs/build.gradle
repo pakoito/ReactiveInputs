@@ -1,0 +1,26 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.14+'
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'propdeps-idea'
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'io.reactivex:rxjava:1.0.+'
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    provided 'org.projectlombok:lombok:1.14.+'
+}
