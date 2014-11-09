@@ -23,6 +23,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		random = new Random();
 		inputs = new ReactiveInputs();
 		inputs.subscribeMove(new ReactiveInputs.Hadouken());
+		inputs.subscribeMove(new ReactiveInputs.Shoryuken());
 	}
 
 	@Override
