@@ -5,16 +5,24 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Random;
+
+@Slf4j
 public class MyGdxGame extends ApplicationAdapter {
 	SpriteBatch batch;
 	Texture img;
-	
+	private Random random;
+	private ReactiveInputs inputs;
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		img = new Texture("badlogic.jpg");
-		new ReactiveInputs().start();
+		random = new Random();
+		inputs = new ReactiveInputs();
+		inputs.subscribeMove(new ReactiveInputs.Hadouken());
 	}
 
 	@Override
@@ -24,5 +32,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.begin();
 		batch.draw(img, 0, 0);
 		batch.end();
+		ReactiveInputs.SingleInput input = new ReactiveInputs.SingleInput(random.nextInt(KEY_WRAPPER.values().length));
+		inputs.sendMove(input);
 	}
 }

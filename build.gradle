@@ -53,6 +53,8 @@ project(":core") {
         compile project(":reactiveinputs")
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-controllers:$gdxVersion"
+        compile 'org.slf4j:slf4j-api:1.7.7'
+        provided 'org.projectlombok:lombok:1.14.+'
     }
 }
 
