@@ -1,10 +1,7 @@
 
 package com.pacoworks.reactiveinputs;
 
-import static com.pacoworks.reactiveinputs.KEY_WRAPPER.*;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,23 +52,23 @@ public class ReactiveInputs {
                     }
                     return inputs;
                 }).filter(windowMoves -> {
-            List<Integer> inputSequence = move.getInputSequence();
-            int maxErrors = move.getMaxInputErrors();
-            int moveIndex = 0;
-            for (int i = 0; i < windowMoves.size(); i++) {
-                boolean equal = windowMoves.get(i) == inputSequence.get(moveIndex);
-                if (equal && moveIndex + 1 == inputSequence.size()) {
-                    return true;
-                } else if (equal) {
-                    moveIndex++;
-                } else if (maxErrors == 0 || i + maxErrors < inputSequence.size()) {
+                    List<Integer> inputSequence = move.getInputSequence();
+                    int maxErrors = move.getMaxInputErrors();
+                    int moveIndex = 0;
+                    for (int i = 0; i < windowMoves.size(); i++) {
+                        boolean equal = windowMoves.get(i) == inputSequence.get(moveIndex);
+                        if (equal && moveIndex + 1 == inputSequence.size()) {
+                            return true;
+                        } else if (equal) {
+                            moveIndex++;
+                        } else if (maxErrors == 0 || i + maxErrors < inputSequence.size()) {
+                            return false;
+                        } else {
+                            maxErrors--;
+                        }
+                    }
                     return false;
-                } else {
-                    maxErrors--;
-                }
-            }
-            return false;
-        }).subscribeOn(Schedulers.newThread())
+                }).subscribeOn(Schedulers.newThread())
                 .subscribe(message -> log.debug("{} detected! - {}", move.getMoveName(), message));
     }
 
