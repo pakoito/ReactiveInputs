@@ -1,3 +1,4 @@
+
 package com.pacoworks.reactiveinputs;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -21,66 +22,71 @@ import static com.pacoworks.reactiveinputs.KEY_WRAPPER.KEY_RIGHT;
 
 @Slf4j
 public class MyGdxGame extends ApplicationAdapter {
-	SpriteBatch batch;
-	Texture img;
-	private Random random;
-	private ReactiveInputs inputs;
+    SpriteBatch batch;
 
-	@Override
-	public void create () {
-		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
-		random = new Random();
-		inputs = ReactiveInputs.builder().stepsPerSecond(60).build();
-		Hadouken hadouken = new Hadouken();
-		inputs.observeMove(hadouken).subscribeOn(Schedulers.computation()).subscribe(integers -> log.debug("{} detected! - {}", hadouken.getMoveName(), integers));
-//		inputs.observeMove(new Shoryuken());
-	}
+    Texture img;
 
-	@Override
-	public void render () {
-		Gdx.gl.glClearColor(1, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.begin();
-		batch.draw(img, 0, 0);
-		batch.end();
-		inputs.sendMove(random.nextInt(KEY_WRAPPER.values().length));
-	}
+    private Random random;
 
+    private ReactiveInputs inputs;
 
-	@ToString
-	public static class Hadouken implements IKnownMove {
-		@Getter
-		private final List<Integer> inputSequence = Arrays.asList(KEY_DOWN.ordinal(),
-				KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
+    @Override
+    public void create() {
+        batch = new SpriteBatch();
+        img = new Texture("badlogic.jpg");
+        random = new Random();
+        inputs = ReactiveInputs.builder().stepsPerSecond(60).build();
+        Hadouken hadouken = new Hadouken();
+        inputs.observeMove(hadouken)
+                .subscribeOn(Schedulers.computation())
+                .subscribe(
+                        integers -> log.debug("{} detected! - {}", hadouken.getMoveName(), integers));
+        // inputs.observeMove(new Shoryuken());
+    }
 
-		@Getter
-		private final String moveName = "Hadouken";
+    @Override
+    public void render() {
+        Gdx.gl.glClearColor(1, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        batch.begin();
+        batch.draw(img, 0, 0);
+        batch.end();
+        inputs.sendMove(random.nextInt(KEY_WRAPPER.values().length));
+    }
 
-		@Getter
-		@Accessors(prefix = "m")
-		private final int mLeniencyFrames = 4;
+    @ToString
+    public static class Hadouken implements IKnownMove {
+        @Getter
+        private final List<Integer> inputSequence = Arrays.asList(KEY_DOWN.ordinal(),
+                KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
 
-		@Getter
-		@Accessors(prefix = "m")
-		private final int mMaxInputErrors = 2;
-	}
+        @Getter
+        private final String moveName = "Hadouken";
 
-	@ToString
-	public static class Shoryuken implements IKnownMove {
-		@Getter
-		private final List<Integer> inputSequence = Arrays.asList(KEY_RIGHT.ordinal(),
-				KEY_DOWN.ordinal(), KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mLeniencyFrames = 4;
 
-		@Getter
-		private final String moveName = "Shoryuken";
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mMaxInputErrors = 2;
+    }
 
-		@Getter
-		@Accessors(prefix = "m")
-		private final int mLeniencyFrames = 4;
+    @ToString
+    public static class Shoryuken implements IKnownMove {
+        @Getter
+        private final List<Integer> inputSequence = Arrays.asList(KEY_RIGHT.ordinal(),
+                KEY_DOWN.ordinal(), KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
 
-		@Getter
-		@Accessors(prefix = "m")
-		private final int mMaxInputErrors = 2;
-	}
+        @Getter
+        private final String moveName = "Shoryuken";
+
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mLeniencyFrames = 4;
+
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mMaxInputErrors = 2;
+    }
 }
