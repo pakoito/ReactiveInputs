@@ -37,7 +37,7 @@ public class ReactiveInputs {
         return moves
                 .throttleFirst(mWindowDurationMs, TimeUnit.MILLISECONDS)
                 .buffer(mWindowDurationMs
-                        * (move.getLeniencyFrames() + move.getInputSequence().size()),
+                                * (move.getLeniencyFrames() + move.getInputSequence().size()),
                         mWindowDurationMs, TimeUnit.MILLISECONDS)
                 .map(results -> {
                     if (results.size() < move.getInputSequence().size()) {
@@ -71,7 +71,7 @@ public class ReactiveInputs {
                 });
     }
 
-    public void sendMove(int input) {
-        moves.onNext(input);
+    public void sendInputKeycode(int keyCode) {
+        moves.onNext(keyCode);
     }
 }
