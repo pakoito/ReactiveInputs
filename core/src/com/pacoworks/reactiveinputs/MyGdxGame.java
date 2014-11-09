@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static com.pacoworks.reactiveinputs.KEY_WRAPPER.KEY_DOWN;
-import static com.pacoworks.reactiveinputs.KEY_WRAPPER.KEY_ONE;
-import static com.pacoworks.reactiveinputs.KEY_WRAPPER.KEY_RIGHT;
+import static com.pacoworks.reactiveinputs.MyGdxGame.KEY_WRAPPER.KEY_DOWN;
+import static com.pacoworks.reactiveinputs.MyGdxGame.KEY_WRAPPER.KEY_ONE;
+import static com.pacoworks.reactiveinputs.MyGdxGame.KEY_WRAPPER.KEY_RIGHT;
 
 @Slf4j
 public class MyGdxGame extends ApplicationAdapter {
@@ -51,7 +52,7 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.begin();
         batch.draw(img, 0, 0);
         batch.end();
-        inputs.sendMove(random.nextInt(KEY_WRAPPER.values().length));
+        inputs.sendInputKeycode(random.nextInt(KEY_WRAPPER.values().length));
     }
 
     @ToString
@@ -88,5 +89,27 @@ public class MyGdxGame extends ApplicationAdapter {
         @Getter
         @Accessors(prefix = "m")
         private final int mMaxInputErrors = 2;
+    }
+
+    /**
+    * Created by Paco on 09/11/2014.
+    * See LICENSE.md
+    */
+    public static enum KEY_WRAPPER {
+        UNKNOWN("?"), KEY_UP("Up"), KEY_DOWN("Down"), KEY_LEFT("Left"), KEY_RIGHT("Right"), KEY_ONE("One");
+        @Getter
+        private final String mKeyName;
+
+        private KEY_WRAPPER(@NonNull String keyName) {
+            mKeyName = keyName;
+        }
+
+        private static KEY_WRAPPER fromKeycode(int keyCode){
+            KEY_WRAPPER[] values = KEY_WRAPPER.values();
+            if (keyCode < 1 || keyCode >= values.length){
+                return UNKNOWN;
+            }
+            return values[keyCode];
+        }
     }
 }
