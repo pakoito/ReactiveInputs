@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import rx.schedulers.Schedulers;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +32,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		img = new Texture("badlogic.jpg");
 		random = new Random();
 		inputs = ReactiveInputs.builder().stepsPerSecond(60).build();
-		inputs.subscribeMove(new Hadouken());
-//		inputs.subscribeMove(new Shoryuken());
+		Hadouken hadouken = new Hadouken();
+		inputs.observeMove(hadouken).subscribeOn(Schedulers.computation()).subscribe(integers -> log.debug("{} detected! - {}", hadouken.getMoveName(), integers));
+//		inputs.observeMove(new Shoryuken());
 	}
 
 	@Override

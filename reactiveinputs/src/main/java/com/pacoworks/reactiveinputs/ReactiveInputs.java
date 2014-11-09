@@ -1,16 +1,16 @@
 
 package com.pacoworks.reactiveinputs;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import lombok.*;
+import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Builder;
 import lombok.extern.slf4j.Slf4j;
-import rx.schedulers.Schedulers;
+import rx.Observable;
 import rx.subjects.PublishSubject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Paco on 09/11/2014. See LICENSE.md
@@ -21,7 +21,9 @@ public class ReactiveInputs {
 
     @Getter
     @Accessors(prefix = "m")
-    private int mFramesPerSecond;
+    private final int mFramesPerSecond;
+
+    private int mWindowDurationMs;
 
     @Builder
     public ReactiveInputs(int framesPerSecond) {
@@ -30,20 +32,21 @@ public class ReactiveInputs {
         }
         moves = PublishSubject.<Integer> create();
         mFramesPerSecond = framesPerSecond;
+        mWindowDurationMs = 1000 / mFramesPerSecond;
     }
 
-    public void subscribeMove(final IKnownMove move) {
-        int windowDurationMs = 1000 / mFramesPerSecond;
-        moves.throttleFirst(windowDurationMs, TimeUnit.MILLISECONDS)
+    public Observable<List<?>> observeMove(final IKnownMove move) {
+        return moves
+                .throttleFirst(mWindowDurationMs, TimeUnit.MILLISECONDS)
                 // .doOnNext(input -> log.error("Input {}", input))
-                .buffer(windowDurationMs
+                .buffer(mWindowDurationMs
                         * (move.getLeniencyFrames() + move.getInputSequence().size()),
-                        windowDurationMs, TimeUnit.MILLISECONDS)
+                        mWindowDurationMs, TimeUnit.MILLISECONDS)
                 .map(results -> {
                     if (results.size() < move.getInputSequence().size()) {
                         return new ArrayList<>();
                     }
-                    ArrayList<Integer> inputs = new ArrayList<>();
+                    List<Integer> inputs = new ArrayList<>();
                     int startPosition = results.size() - move.getInputSequence().size();
                     startPosition = (startPosition - move.getMaxInputErrors() < 0) ? 0
                             : startPosition - move.getMaxInputErrors();
@@ -68,8 +71,7 @@ public class ReactiveInputs {
                         }
                     }
                     return false;
-                }).subscribeOn(Schedulers.newThread())
-                .subscribe(message -> log.debug("{} detected! - {}", move.getMoveName(), message));
+                });
     }
 
     public void sendMove(int input) {
