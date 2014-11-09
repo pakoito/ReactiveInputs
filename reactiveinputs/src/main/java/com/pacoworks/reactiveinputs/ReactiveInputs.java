@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Builder;
 import rx.Observable;
+import rx.functions.Func1;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 
@@ -39,25 +40,33 @@ public class ReactiveInputs {
                 .buffer(mFrameDurationMs
                         * (move.getLeniencyFrames() + move.getInputSequence().size()),
                         mFrameDurationMs, TimeUnit.MILLISECONDS)
-                .filter(results -> results.size() >= move.getInputSequence().size())
-                .filter(windowMoves -> {
-                    List<Integer> inputSequence = move.getInputSequence();
-                    int maxErrors = move.getMaxInputErrors();
-                    int moveIndex = 0;
-                    for (int i = 0; i < windowMoves.size(); i++) {
-                        boolean equal = windowMoves.get(i).equals(inputSequence.get(moveIndex));
-                        if (equal && moveIndex + 1 == inputSequence.size()) {
-                            return true;
-                        } else if (equal) {
-                            moveIndex++;
-                        } else if (maxErrors == 0 || i + maxErrors < inputSequence.size()) {
-                            return false;
-                        } else {
-                            maxErrors--;
-                        }
+                .filter(new Func1<List<Integer>, Boolean>() {
+                    @Override
+                    public Boolean call(List<Integer> results) {
+                        return results.size() >= move.getInputSequence().size();
                     }
-                    return false;
-                });
+                })
+                .filter(new Func1<List<Integer>, Boolean>() {
+                            @Override
+                            public Boolean call(List<Integer> windowMoves) {
+                                List<Integer> inputSequence = move.getInputSequence();
+                                int maxErrors = move.getMaxInputErrors();
+                                int moveIndex = 0;
+                                for (int i = 0; i < windowMoves.size(); i++) {
+                                    boolean equal = windowMoves.get(i).equals(inputSequence.get(moveIndex));
+                                    if (equal && moveIndex + 1 == inputSequence.size()) {
+                                        return true;
+                                    } else if (equal) {
+                                        moveIndex++;
+                                    } else if (maxErrors == 0 || i + maxErrors < inputSequence.size()) {
+                                        return false;
+                                    } else {
+                                        maxErrors--;
+                                    }
+                                }
+                                return false;
+                            }
+                        });
     }
 
     public void sendInputKeycode(int keyCode) {
