@@ -6,6 +6,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.Builder;
 import rx.Observable;
 import rx.subjects.PublishSubject;
+import rx.subjects.SerializedSubject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * Created by Paco on 09/11/2014. See LICENSE.md
  */
 public class ReactiveInputs {
-    private final PublishSubject<Integer> moves;
+    private final SerializedSubject<Integer, Integer> moves;
 
     @Getter
     @Accessors(prefix = "m")
@@ -28,7 +29,7 @@ public class ReactiveInputs {
         if (framesPerSecond < 1) {
             throw new IllegalArgumentException("Frames Per Second must be more than 0");
         }
-        moves = PublishSubject.<Integer> create();
+        moves = new SerializedSubject<>(PublishSubject.<Integer> create());
         mFramesPerSecond = framesPerSecond;
         mWindowDurationMs = 1000 / mFramesPerSecond;
     }
