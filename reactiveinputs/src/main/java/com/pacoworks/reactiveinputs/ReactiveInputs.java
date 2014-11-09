@@ -3,6 +3,8 @@ package com.pacoworks.reactiveinputs;
 
 import static com.pacoworks.reactiveinputs.KEY_WRAPPER.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -10,6 +12,7 @@ import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import rx.Observable;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 /**
@@ -17,7 +20,7 @@ import rx.subjects.PublishSubject;
  */
 @Slf4j
 public class ReactiveInputs {
-    private final PublishSubject<SingleInput> moves;
+    private final PublishSubject<Integer> moves;
 
     @Getter
     @Setter
@@ -30,25 +33,42 @@ public class ReactiveInputs {
     private int mLeniencyFrames;
 
     public ReactiveInputs() {
-        moves = PublishSubject.<SingleInput> create();
+        moves = PublishSubject.<Integer> create();
         mFramesPerSecond = 60;
         mLeniencyFrames = 4;
         int windowDurationMs = 1000 / mFramesPerSecond;
-        moves.doOnNext(move -> log.error("{}", move))
-                .throttleFirst(windowDurationMs, TimeUnit.MILLISECONDS)
-                .map(input -> input.mKeyCode);
+        moves.doOnNext(move -> log.error("{}", move)).throttleFirst(windowDurationMs,
+                TimeUnit.MILLISECONDS);
     }
 
     public void subscribeMove(final IKnownMove move) {
         int windowDurationMs = 1000 / mFramesPerSecond;
-        Observable moveInput = Observable.just(move.getInputSequence());
-        moves.buffer(windowDurationMs * mLeniencyFrames * move.getInputSequence().length,
-                TimeUnit.MILLISECONDS)
-        // .takeLast(move.getInputSequence().length)
-                .forEach(message -> log.error("{} - {}", move.getMoveName(), message));
+        moves.buffer(windowDurationMs * (mLeniencyFrames + move.getInputSequence().size()),
+                windowDurationMs, TimeUnit.MILLISECONDS, Schedulers.computation()).map(results -> {
+            if (results.size() < move.getInputSequence().size()) {
+                return new ArrayList<>();
+            }
+            ArrayList<Integer> inputs = new ArrayList<>();
+            for (int i = results.size() - move.getInputSequence().size(); i < results.size(); i++) {
+                inputs.add(results.get(i));
+            }
+            return inputs;
+        }).filter(windowMoves -> {
+            List<Integer> inputSequence = move.getInputSequence();
+            if (windowMoves.size() != inputSequence.size()) {
+                return false;
+            }
+            for (int i = 0; i < windowMoves.size(); i++) {
+                if (windowMoves.get(i) != inputSequence.get(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }).subscribe(message -> log.debug("{} - {}", move.getMoveName(), message));
     }
 
-    public void sendMove(SingleInput input) {
+    public void sendMove(int input) {
+        log.debug("{}", input);
         moves.onNext(input);
     }
 
@@ -69,9 +89,8 @@ public class ReactiveInputs {
     @ToString
     public static class Hadouken implements IKnownMove {
         @Getter
-        private int[] inputSequence = new int[] {
-                KEY_DOWN.ordinal(), KEY_RIGHT.ordinal(), KEY_ONE.ordinal()
-        };
+        private List<Integer> inputSequence = Arrays.asList(KEY_DOWN.ordinal(),
+                KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
 
         @Getter
         private String moveName = "Hadouken";
@@ -80,9 +99,8 @@ public class ReactiveInputs {
     @ToString
     public static class Shoryuken implements IKnownMove {
         @Getter
-        private int[] inputSequence = new int[] {
-                KEY_DOWN.ordinal(), KEY_RIGHT.ordinal(), KEY_ONE.ordinal()
-        };
+        private List<Integer> inputSequence = Arrays.asList(KEY_DOWN.ordinal(),
+                KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
 
         @Getter
         private String moveName = "Shoryuken";

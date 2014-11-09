@@ -32,7 +32,6 @@ public class MyGdxGame extends ApplicationAdapter {
 		batch.begin();
 		batch.draw(img, 0, 0);
 		batch.end();
-		ReactiveInputs.SingleInput input = new ReactiveInputs.SingleInput(random.nextInt(KEY_WRAPPER.values().length));
-		inputs.sendMove(input);
+		inputs.sendMove(random.nextInt(KEY_WRAPPER.values().length));
 	}
 }
