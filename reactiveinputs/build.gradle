@@ -21,6 +21,5 @@ repositories {
 
 dependencies {
     compile 'io.reactivex:rxjava:1.0.+'
-    compile 'org.slf4j:slf4j-api:1.7.7'
     provided 'org.projectlombok:lombok:1.14.+'
 }

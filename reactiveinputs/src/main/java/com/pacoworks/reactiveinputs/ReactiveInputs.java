@@ -4,7 +4,6 @@ package com.pacoworks.reactiveinputs;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Builder;
-import lombok.extern.slf4j.Slf4j;
 import rx.Observable;
 import rx.subjects.PublishSubject;
 
@@ -15,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Paco on 09/11/2014. See LICENSE.md
  */
-@Slf4j
 public class ReactiveInputs {
     private final PublishSubject<Integer> moves;
 
@@ -38,7 +36,6 @@ public class ReactiveInputs {
     public Observable<List<?>> observeMove(final IKnownMove move) {
         return moves
                 .throttleFirst(mWindowDurationMs, TimeUnit.MILLISECONDS)
-                // .doOnNext(input -> log.error("Input {}", input))
                 .buffer(mWindowDurationMs
                         * (move.getLeniencyFrames() + move.getInputSequence().size()),
                         mWindowDurationMs, TimeUnit.MILLISECONDS)
