@@ -11,6 +11,7 @@ import lombok.NonNull;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 import java.util.Arrays;
@@ -36,12 +37,17 @@ public class MyGdxGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
         random = new Random();
-        inputs = ReactiveInputs.builder().stepsPerSecond(60).build();
-        Hadouken hadouken = new Hadouken();
+        inputs = ReactiveInputs.builder().framesPerSecond(60).build();
+        final Hadouken hadouken = new Hadouken();
         inputs.observeMove(hadouken)
                 .subscribeOn(Schedulers.computation())
                 .subscribe(
-                        integers -> log.debug("{} detected! - {}", hadouken.getMoveName(), integers));
+                        new Action1<List<Integer>>() {
+                            @Override
+                            public void call(List<Integer> integers) {
+                                log.debug("{} detected! - {}", hadouken.getMoveName(), integers);
+                            }
+                        });
         // inputs.observeMove(new Shoryuken());
     }
 
@@ -66,7 +72,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         @Getter
         @Accessors(prefix = "m")
-        private final int mLeniencyFrames = 4;
+        private final int mLeniencyFrames = 2;
 
         @Getter
         @Accessors(prefix = "m")
