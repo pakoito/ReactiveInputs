@@ -27,42 +27,51 @@ public class ReactiveInputs {
     private int mFramesPerSecond;
 
     @Builder
-    public ReactiveInputs(int stepsPerSecond) {
-        if (stepsPerSecond < 1){
+    public ReactiveInputs(int framesPerSecond) {
+        if (framesPerSecond < 1) {
             throw new IllegalArgumentException("Frames Per Second must be more than 0");
         }
         moves = PublishSubject.<Integer> create();
-        mFramesPerSecond = stepsPerSecond;
+        mFramesPerSecond = framesPerSecond;
     }
 
     public void subscribeMove(final IKnownMove move) {
         int windowDurationMs = 1000 / mFramesPerSecond;
         moves.throttleFirst(windowDurationMs, TimeUnit.MILLISECONDS)
-                .doOnNext(input -> log.error("Input {}", input))
-                .buffer(windowDurationMs * (move.getLeniencyFrames() + move.getInputSequence().size()),
+                // .doOnNext(input -> log.error("Input {}", input))
+                .buffer(windowDurationMs
+                        * (move.getLeniencyFrames() + move.getInputSequence().size()),
                         windowDurationMs, TimeUnit.MILLISECONDS)
                 .map(results -> {
                     if (results.size() < move.getInputSequence().size()) {
                         return new ArrayList<>();
                     }
                     ArrayList<Integer> inputs = new ArrayList<>();
-                    for (int i = results.size() - move.getInputSequence().size(); i < results
-                            .size(); i++) {
+                    int startPosition = results.size() - move.getInputSequence().size();
+                    startPosition = (startPosition - move.getMaxInputErrors() < 0) ? 0
+                            : startPosition - move.getMaxInputErrors();
+                    for (int i = startPosition; i < results.size(); i++) {
                         inputs.add(results.get(i));
                     }
                     return inputs;
                 }).filter(windowMoves -> {
-                    List<Integer> inputSequence = move.getInputSequence();
-                    if (windowMoves.size() != inputSequence.size()) {
-                        return false;
-                    }
-                    for (int i = 0; i < windowMoves.size(); i++) {
-                        if (windowMoves.get(i) != inputSequence.get(i)) {
-                            return false;
-                        }
-                    }
+            List<Integer> inputSequence = move.getInputSequence();
+            int maxErrors = move.getMaxInputErrors();
+            int moveIndex = 0;
+            for (int i = 0; i < windowMoves.size(); i++) {
+                boolean equal = windowMoves.get(i) == inputSequence.get(moveIndex);
+                if (equal && moveIndex + 1 == inputSequence.size()) {
                     return true;
-                }).subscribeOn(Schedulers.newThread())
+                } else if (equal) {
+                    moveIndex++;
+                } else if (maxErrors == 0 || i + maxErrors < inputSequence.size()) {
+                    return false;
+                } else {
+                    maxErrors--;
+                }
+            }
+            return false;
+        }).subscribeOn(Schedulers.newThread())
                 .subscribe(message -> log.debug("{} detected! - {}", move.getMoveName(), message));
     }
 

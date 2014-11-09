@@ -32,7 +32,7 @@ public class MyGdxGame extends ApplicationAdapter {
 		random = new Random();
 		inputs = ReactiveInputs.builder().stepsPerSecond(60).build();
 		inputs.subscribeMove(new Hadouken());
-		inputs.subscribeMove(new Shoryuken());
+//		inputs.subscribeMove(new Shoryuken());
 	}
 
 	@Override
@@ -58,6 +58,10 @@ public class MyGdxGame extends ApplicationAdapter {
 		@Getter
 		@Accessors(prefix = "m")
 		private final int mLeniencyFrames = 4;
+
+		@Getter
+		@Accessors(prefix = "m")
+		private final int mMaxInputErrors = 2;
 	}
 
 	@ToString
@@ -72,5 +76,9 @@ public class MyGdxGame extends ApplicationAdapter {
 		@Getter
 		@Accessors(prefix = "m")
 		private final int mLeniencyFrames = 4;
+
+		@Getter
+		@Accessors(prefix = "m")
+		private final int mMaxInputErrors = 2;
 	}
 }
