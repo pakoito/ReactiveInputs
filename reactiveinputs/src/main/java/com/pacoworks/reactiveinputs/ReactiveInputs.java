@@ -8,7 +8,6 @@ import rx.Observable;
 import rx.subjects.PublishSubject;
 import rx.subjects.SerializedSubject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +21,7 @@ public class ReactiveInputs {
     @Accessors(prefix = "m")
     private final int mFramesPerSecond;
 
-    private int mWindowDurationMs;
+    private int mFrameDurationMs;
 
     @Builder
     public ReactiveInputs(int framesPerSecond) {
@@ -31,33 +30,22 @@ public class ReactiveInputs {
         }
         moves = new SerializedSubject<>(PublishSubject.<Integer> create());
         mFramesPerSecond = framesPerSecond;
-        mWindowDurationMs = 1000 / mFramesPerSecond;
+        mFrameDurationMs = 1000 / mFramesPerSecond;
     }
 
-    public Observable<List<?>> observeMove(final IKnownMove move) {
+    public Observable<List<Integer>> observeMove(final IKnownMove move) {
         return moves
-                .throttleFirst(mWindowDurationMs, TimeUnit.MILLISECONDS)
-                .buffer(mWindowDurationMs
-                                * (move.getLeniencyFrames() + move.getInputSequence().size()),
-                        mWindowDurationMs, TimeUnit.MILLISECONDS)
-                .map(results -> {
-                    if (results.size() < move.getInputSequence().size()) {
-                        return new ArrayList<>();
-                    }
-                    List<Integer> inputs = new ArrayList<>();
-                    int startPosition = results.size() - move.getInputSequence().size();
-                    startPosition = (startPosition - move.getMaxInputErrors() < 0) ? 0
-                            : startPosition - move.getMaxInputErrors();
-                    for (int i = startPosition; i < results.size(); i++) {
-                        inputs.add(results.get(i));
-                    }
-                    return inputs;
-                }).filter(windowMoves -> {
+                .throttleFirst(mFrameDurationMs, TimeUnit.MILLISECONDS)
+                .buffer(mFrameDurationMs
+                        * (move.getLeniencyFrames() + move.getInputSequence().size()),
+                        mFrameDurationMs, TimeUnit.MILLISECONDS)
+                .filter(results -> results.size() >= move.getInputSequence().size())
+                .filter(windowMoves -> {
                     List<Integer> inputSequence = move.getInputSequence();
                     int maxErrors = move.getMaxInputErrors();
                     int moveIndex = 0;
                     for (int i = 0; i < windowMoves.size(); i++) {
-                        boolean equal = windowMoves.get(i) == inputSequence.get(moveIndex);
+                        boolean equal = windowMoves.get(i).equals(inputSequence.get(moveIndex));
                         if (equal && moveIndex + 1 == inputSequence.size()) {
                             return true;
                         } else if (equal) {
