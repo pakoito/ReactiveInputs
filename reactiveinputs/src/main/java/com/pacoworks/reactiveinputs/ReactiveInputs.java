@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.*;
 import lombok.experimental.Accessors;
+import lombok.experimental.Builder;
 import lombok.extern.slf4j.Slf4j;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
@@ -22,28 +23,24 @@ public class ReactiveInputs {
     private final PublishSubject<Integer> moves;
 
     @Getter
-    @Setter
     @Accessors(prefix = "m")
     private int mFramesPerSecond;
 
-    @Getter
-    @Setter
-    @Accessors(prefix = "m")
-    private int mLeniencyFrames;
-
-    public ReactiveInputs() {
+    @Builder
+    public ReactiveInputs(int stepsPerSecond) {
+        if (stepsPerSecond < 1){
+            throw new IllegalArgumentException("Frames Per Second must be more than 0");
+        }
         moves = PublishSubject.<Integer> create();
-        mFramesPerSecond = 60;
-        mLeniencyFrames = 4;
-        int windowDurationMs = 1000 / mFramesPerSecond;
+        mFramesPerSecond = stepsPerSecond;
     }
 
     public void subscribeMove(final IKnownMove move) {
         int windowDurationMs = 1000 / mFramesPerSecond;
         moves.throttleFirst(windowDurationMs, TimeUnit.MILLISECONDS)
                 .doOnNext(input -> log.error("Input {}", input))
-                .buffer(windowDurationMs * (mLeniencyFrames + move.getInputSequence().size()),
-                        windowDurationMs, TimeUnit.MILLISECONDS, Schedulers.computation())
+                .buffer(windowDurationMs * (move.getLeniencyFrames() + move.getInputSequence().size()),
+                        windowDurationMs, TimeUnit.MILLISECONDS)
                 .map(results -> {
                     if (results.size() < move.getInputSequence().size()) {
                         return new ArrayList<>();
@@ -65,31 +62,11 @@ public class ReactiveInputs {
                         }
                     }
                     return true;
-                })
+                }).subscribeOn(Schedulers.newThread())
                 .subscribe(message -> log.debug("{} detected! - {}", move.getMoveName(), message));
     }
 
     public void sendMove(int input) {
         moves.onNext(input);
-    }
-
-    @ToString
-    public static class Hadouken implements IKnownMove {
-        @Getter
-        private List<Integer> inputSequence = Arrays.asList(KEY_DOWN.ordinal(),
-                KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
-
-        @Getter
-        private String moveName = "Hadouken";
-    }
-
-    @ToString
-    public static class Shoryuken implements IKnownMove {
-        @Getter
-        private List<Integer> inputSequence = Arrays.asList(KEY_RIGHT.ordinal(),
-                KEY_DOWN.ordinal(), KEY_RIGHT.ordinal(), KEY_ONE.ordinal());
-
-        @Getter
-        private String moveName = "Shoryuken";
     }
 }

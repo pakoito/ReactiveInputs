@@ -10,4 +10,6 @@ public interface IKnownMove {
     public List<Integer> getInputSequence();
 
     public String getMoveName();
+
+    public int getLeniencyFrames();
 }
