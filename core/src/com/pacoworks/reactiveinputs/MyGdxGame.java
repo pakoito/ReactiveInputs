@@ -37,7 +37,7 @@ public class MyGdxGame extends ApplicationAdapter {
         batch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
         random = new Random();
-        inputs = ReactiveInputs.builder().framesPerSecond(60).build();
+        inputs = new ReactiveInputs();
         final Hadouken hadouken = new Hadouken();
         inputs.observeMove(hadouken)
                 .subscribeOn(Schedulers.computation())
@@ -77,6 +77,10 @@ public class MyGdxGame extends ApplicationAdapter {
         @Getter
         @Accessors(prefix = "m")
         private final int mMaxInputErrors = 2;
+
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mFramesInSecond = 60;
     }
 
     @ToString
@@ -95,6 +99,10 @@ public class MyGdxGame extends ApplicationAdapter {
         @Getter
         @Accessors(prefix = "m")
         private final int mMaxInputErrors = 2;
+
+        @Getter
+        @Accessors(prefix = "m")
+        private final int mFramesInSecond = 60;
     }
 
     /**

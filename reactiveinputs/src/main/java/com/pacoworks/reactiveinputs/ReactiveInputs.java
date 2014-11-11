@@ -1,9 +1,6 @@
 
 package com.pacoworks.reactiveinputs;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
-import lombok.experimental.Builder;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.subjects.PublishSubject;
@@ -18,23 +15,18 @@ import java.util.concurrent.TimeUnit;
 public class ReactiveInputs {
     private final SerializedSubject<Integer, Integer> moves;
 
-    @Getter
-    @Accessors(prefix = "m")
-    private final int mFramesPerSecond;
-
-    private int mFrameDurationMs;
-
-    @Builder
-    public ReactiveInputs(int framesPerSecond) {
-        if (framesPerSecond < 1) {
-            throw new IllegalArgumentException("Frames Per Second must be more than 0");
-        }
+    public ReactiveInputs() {
         moves = new SerializedSubject<>(PublishSubject.<Integer> create());
-        mFramesPerSecond = framesPerSecond;
-        mFrameDurationMs = 1000 / mFramesPerSecond;
     }
 
     public Observable<List<Integer>> observeMove(final IKnownMove move) {
+        if (move.getFramesInSecond() < 1) {
+            throw new IllegalArgumentException("Frames In Second must be more than 0");
+        }
+        if (move.getLeniencyFrames() < 0){
+            throw new IllegalArgumentException("Leniency Frames must be a positive number");
+        }
+        final int mFrameDurationMs = 1000 / move.getFramesInSecond();
         return moves
                 .throttleFirst(mFrameDurationMs, TimeUnit.MILLISECONDS)
                 .buffer(mFrameDurationMs

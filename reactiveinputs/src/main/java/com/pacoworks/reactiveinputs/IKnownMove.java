@@ -14,4 +14,6 @@ public interface IKnownMove {
     public int getLeniencyFrames();
 
     public int getMaxInputErrors();
+
+    public int getFramesInSecond();
 }
